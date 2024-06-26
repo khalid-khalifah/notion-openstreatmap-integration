@@ -70,3 +70,4 @@ cython_debug/
 .pyd
 *.py[cod]
 *$py.class
+.DS_Store
