@@ -17,8 +17,7 @@ async def startup_event():
 
 @app.get("/api/locations", response_model=list[Location])
 async def get_locations(session: AsyncSession = Depends(get_session)):
-    cached_result = await get_cached_result(session)
-    if cached_result:
+    if cached_result := await get_cached_result(session):
         return cached_result
     data = await fetch_data(session)
     return data

@@ -9,7 +9,7 @@ settings = get_settings()
 
 
 class Location(SQLModel, table=True):
-    id: str = Field(default_factory=uuid.uuid4, primary_key=True)
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     name: str
     latitude: float
     longitude: float
@@ -19,12 +19,12 @@ class Location(SQLModel, table=True):
 
 
 class LastCallTime(SQLModel, table=True):
-    id: str = Field(default_factory=uuid.uuid4, primary_key=True)
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     last_call_time: datetime = Field(default_factory=datetime.now)
 
 
 class CashedResult(SQLModel, table=True):
-    id: str = Field(default_factory=uuid.uuid4, primary_key=True)
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     data: list[dict] = Field(sa_column=Column(JSON))
     date: datetime = Field(default_factory=datetime.now)
 
