@@ -15,7 +15,7 @@
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
         let center = [24.7136, 46.6753];
-        let zoom = 10;
+        let zoom = 11;
         const map = L.map('map').setView(center, zoom);
 
         // Add OpenStreetMap tile layer
@@ -30,7 +30,7 @@
                 data.forEach(location => {
                     L.marker([location.latitude, location.longitude])
                         .addTo(map)
-                        .bindPopup(`<b>${location.name}</b>`);
+                        .bindPopup(`<b>Name : ${location.name}</b><br>Status : ${location.status}<br>Location_type : ${location.location_type}`);
                 });
             })
             .catch(error => console.error('Error fetching location data:', error));
