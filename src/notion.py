@@ -9,7 +9,7 @@ from .db import insert_data, get_last_call_time, Location
 settings = get_settings()
 
 
-def process_notion_data(data):
+def process_notion_data(data) -> list[dict]:
     results = data["results"]
     if not results:
         return []
@@ -50,7 +50,6 @@ async def fetch_data(session: AsyncSession) -> list[Location]:
     last_time_insert = process_time(last_time_insert)
 
     data = await fetch_notion_data()
-
     if not data.get("results"):
         return []
 
@@ -60,9 +59,11 @@ async def fetch_data(session: AsyncSession) -> list[Location]:
 
     if last_edited_time > last_time_insert:
         data = process_notion_data(data)
+        print(f'processed data {data}')
     else:
         data = []
     db_data = await insert_data(data, session)
+    print(f'inserted data {db_data}')
     return db_data
 
 

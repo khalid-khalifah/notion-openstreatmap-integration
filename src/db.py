@@ -63,16 +63,15 @@ async def write_to_cache(data: list[Location] | None, session: AsyncSession):
 async def insert_data(data: list | None, session: AsyncSession) -> list[Location]:
     if data:
         await session.execute(delete(Location))
-
         for record in data:
             await session.merge(Location(**record))
-        await session.merge(LastCallTime(last_call_time=datetime.now()))
+        session.add(LastCallTime(last_call_time=datetime.now()))
         await session.commit()
     result = await session.execute(select(Location).where(Location.status.in_(settings.STATUS_TO_INCLUDE)))  # type: ignore
     result = result.scalars().all()
-    result = list(result)
-    await write_to_cache(result, session)
-    return result
+    final_result = [x.model_dump(mode="json") for x in result]
+    await write_to_cache(list(result), session)
+    return [Location(**x) for x in final_result]
 
 
 async def get_last_call_time(session: AsyncSession) -> datetime | None:
