@@ -43,10 +43,9 @@
                     let markerColor = location.status.color || 'yellow';  // Default to blue if no color is provided
                     console.log(location.status.color);
                     let customMarker = createColoredMarker(markerColor);
-
                     L.marker([location.latitude, location.longitude], { icon: customMarker })
                         .addTo(map)
-                        .bindPopup(`<b>Name: ${location.name}</b><br>Status: ${location.status.name}<br>Location type: ${location.location_type}`);
+                        .bindPopup(`<b>Name: ${location.name}</b><br><b>Status</b>: ${location.status.name}<br><b>Location type</b>: ${location.location_type}<br><a href="https://www.google.com/maps/search/?api=1&query=${location.latitude}%2C${location.longitude}" target="_blank"><b>Google map</b></a>`);
                 });
             })
             .catch(error => console.error('Error fetching location data:', error));
