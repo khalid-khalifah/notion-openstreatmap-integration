@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "notion-openstreatmap-integration"
+name = "notion-openstreetmap-integration"
 version = "0.1.0"
 description = ""
-authors = ["khalid khalifah <me@ikhal.id>"]
+authors = ["Khalid Khalifah <me@ikhal.id>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
