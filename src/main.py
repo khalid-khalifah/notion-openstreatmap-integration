@@ -25,18 +25,16 @@ async def startup_event():
 async def get_locations(session: AsyncSession = Depends(get_session)):
     async with session:
         if cached_result := await get_cached_result(session):
-            pprint(cached_result)
             return cached_result
         data = await asyncio.gather(*[fetch_data(session, database_id) for database_id in settings.NOTION_DATABASE_ID])
         data = reduce(lambda x, y: x + y, data)
         await write_to_cache(data, session)
-        pprint(data)
         return data
 
 
 @app.get("/")
 async def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse("index.jinja", {"request": request, 'settings':settings})
 
 
 if __name__ == "__main__":

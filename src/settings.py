@@ -7,10 +7,12 @@ class Settings(BaseSettings):
     NOTION_DATABASE_ID: list[str]
 
     STATUS_TO_INCLUDE: list[str] = ["Signed", "Follow up"]
-    MAP_CENTER: tuple[float, float] = (24.7136, 46.6753)
-    MAP_ZOOM: int = 10
 
     CACHE_TIME: int = 10
+
+    MAP_CENTER: list[float] = [24.7136, 46.6753]
+    MAP_ZOOM: int = 11
+    MAP_NAME: str = 'My Map'
 
     class Config:
         env_file = ".env"
@@ -19,3 +21,4 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings():
     return Settings()  # type: ignore
+

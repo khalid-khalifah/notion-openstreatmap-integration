@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>OpenStreetMap with Notion Data</title>
+    <title>{{settings.MAP_NAME}}</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         #map {
@@ -14,8 +14,8 @@
     <div id="map"></div>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-        let center = [24.7136, 46.6753];
-        let zoom = 11;
+        let center = {{settings.MAP_CENTER}}; 
+        let zoom = {{settings.MAP_ZOOM}}; 
         const map = L.map('map').setView(center, zoom);
 
         // Add OpenStreetMap tile layer

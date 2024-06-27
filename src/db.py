@@ -6,7 +6,6 @@ import uuid
 from datetime import datetime, timedelta
 from .settings import get_settings
 
-from pprint import pprint 
 
 settings = get_settings()
 
@@ -71,7 +70,6 @@ async def pick_status_color(status: dict, session: AsyncSession) -> str:
     colors = ['red', 'yellow', 'green', 'blue', 'violet', 'grey', 'gold', 'orange', 'black']
     unique_colors = await session.execute(select(Status.color).distinct())  # type: ignore
     unique_colors_list = unique_colors.scalars().all()
-    print(unique_colors_list)
     if status['color'] in colors:
         if status['color'] not in unique_colors_list and status['color'] in colors:
             return status['color']
@@ -102,7 +100,6 @@ async def insert_data(data: list | None, session: AsyncSession, database_id: str
         await session.commit()
     result = await session.execute(select(Location).where(Location.database_id == database_id))  # type: ignore
     result = result.scalars().all()
-    pprint(result)
     final_result = [x.model_dump(mode="json") for x in result]
     return [Location(**x) for x in final_result]
 
