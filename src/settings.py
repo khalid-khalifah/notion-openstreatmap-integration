@@ -4,7 +4,7 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     NOTION_API_KEY: str
-    NOTION_DATABASE_ID: str
+    NOTION_DATABASE_ID: list[str]
 
     STATUS_TO_INCLUDE: list[str] = ["Signed", "Follow up"]
     MAP_CENTER: tuple[float, float] = (24.7136, 46.6753)

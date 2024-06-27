@@ -1,27 +1,35 @@
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import select, delete, create_engine, Column, JSON
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 import uuid
 from datetime import datetime, timedelta
 from .settings import get_settings
 
+from pprint import pprint 
+
 settings = get_settings()
 
 
+class Status(SQLModel, table=True):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
+    name: str 
+    color: str = Field(default='Blue', nullable=True)
+
 class Location(SQLModel, table=True):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
+    database_id: str
     name: str
     latitude: float
     longitude: float
-    status: str = Field(nullable=True)
     location_type: str = Field(nullable=True)
     area: float = Field(nullable=True)
-
+    status: dict = Field(sa_column=Column(JSON))
 
 class LastCallTime(SQLModel, table=True):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
+    database_id: str 
     last_call_time: datetime = Field(default_factory=datetime.now)
-
 
 class CashedResult(SQLModel, table=True):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
@@ -59,22 +67,47 @@ async def write_to_cache(data: list[Location] | None, session: AsyncSession):
         )
         await session.commit()
 
+async def pick_status_color(status: dict, session: AsyncSession) -> str:
+    colors = ['red', 'yellow', 'green', 'blue', 'violet', 'grey', 'gold', 'orange', 'black']
+    unique_colors = await session.execute(select(Status.color).distinct())  # type: ignore
+    unique_colors_list = unique_colors.scalars().all()
+    print(unique_colors_list)
+    if status['color'] in colors:
+        if status['color'] not in unique_colors_list and status['color'] in colors:
+            return status['color']
+    list_of_colors = [color for color in colors if color not in unique_colors_list]
+    return list_of_colors[0]
 
-async def insert_data(data: list | None, session: AsyncSession) -> list[Location]:
+
+async def get_or_create_status(session: AsyncSession, status:dict) -> Status:
+    result = await session.execute(select(Status).where(Status.name == status['name']))  # type: ignore
+    result = result.scalars().first()
+    if result:
+        return result
+    color = await pick_status_color(status, session)
+    status_obj = Status(name= status['name'], color= color)
+    session.add(status_obj)
+    await session.commit()
+    await session.refresh(status_obj)   
+    return status_obj
+
+async def insert_data(data: list | None, session: AsyncSession, database_id: str) -> list[Location]:
     if data:
-        await session.execute(delete(Location))
+        await session.execute(delete(Location).where(Location.database_id == database_id))   # type: ignore
+        await session.commit() 
         for record in data:
-            await session.merge(Location(**record))
-        session.add(LastCallTime(last_call_time=datetime.now()))
+            status = await get_or_create_status(session, record.pop('status'))  
+            session.add(Location(database_id=database_id, **record, status= status.model_dump(mode="json")))
+        session.add(LastCallTime(database_id=database_id, last_call_time=datetime.now()))
         await session.commit()
-    result = await session.execute(select(Location).where(Location.status.in_(settings.STATUS_TO_INCLUDE)))  # type: ignore
+    result = await session.execute(select(Location).where(Location.database_id == database_id))  # type: ignore
     result = result.scalars().all()
+    pprint(result)
     final_result = [x.model_dump(mode="json") for x in result]
-    await write_to_cache(list(result), session)
     return [Location(**x) for x in final_result]
 
 
-async def get_last_call_time(session: AsyncSession) -> datetime | None:
-    result = await session.execute(select(LastCallTime).order_by(LastCallTime.last_call_time.desc()).limit(1))  # type: ignore
+async def get_last_call_time(session: AsyncSession, database_id: str) -> datetime | None:
+    result = await session.execute(select(LastCallTime).where(LastCallTime.database_id == database_id).order_by(LastCallTime.last_call_time.desc()).limit(1))  # type: ignore
     data = result.scalars().first()
     return data.last_call_time if data else None

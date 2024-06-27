@@ -1,10 +1,16 @@
+import asyncio
+from functools import reduce
+from pprint import pprint
+
 from .notion import fetch_data
-from .db import Location, create_all, get_session, get_cached_result
+from .db import Location, create_all, get_session, get_cached_result, write_to_cache
+from .settings import get_settings
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import FastAPI, Request, Depends
 from fastapi.templating import Jinja2Templates
 
+settings = get_settings()
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
@@ -17,10 +23,15 @@ async def startup_event():
 
 @app.get("/api/locations", response_model=list[Location])
 async def get_locations(session: AsyncSession = Depends(get_session)):
-    if cached_result := await get_cached_result(session):
-        return cached_result
-    data = await fetch_data(session)
-    return data
+    async with session:
+        if cached_result := await get_cached_result(session):
+            pprint(cached_result)
+            return cached_result
+        data = await asyncio.gather(*[fetch_data(session, database_id) for database_id in settings.NOTION_DATABASE_ID])
+        data = reduce(lambda x, y: x + y, data)
+        await write_to_cache(data, session)
+        pprint(data)
+        return data
 
 
 @app.get("/")

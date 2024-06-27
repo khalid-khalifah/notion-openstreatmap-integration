@@ -23,14 +23,30 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
+        // Function to create a custom colored marker
+        function createColoredMarker(color) {
+            return L.icon({
+                iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            });
+        }
+
         // Fetch data from the FastAPI backend
         fetch('/api/locations')
             .then(response => response.json())
             .then(data => {
                 data.forEach(location => {
-                    L.marker([location.latitude, location.longitude])
+                    let markerColor = location.status.color || 'yellow';  // Default to blue if no color is provided
+                    console.log(location.status.color);
+                    let customMarker = createColoredMarker(markerColor);
+
+                    L.marker([location.latitude, location.longitude], { icon: customMarker })
                         .addTo(map)
-                        .bindPopup(`<b>Name : ${location.name}</b><br>Status : ${location.status}<br>Location_type : ${location.location_type}`);
+                        .bindPopup(`<b>Name: ${location.name}</b><br>Status: ${location.status.name}<br>Location type: ${location.location_type}`);
                 });
             })
             .catch(error => console.error('Error fetching location data:', error));
