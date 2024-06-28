@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     MAP_ZOOM: int = 11
     MAP_NAME: str = 'My Map'
 
+    class Config:
+        env_file = ".env"
+
 
 
 @lru_cache
